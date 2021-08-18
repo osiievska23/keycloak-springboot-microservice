@@ -2,20 +2,20 @@ package com.example.keycloakspringbootmicroservice.services.impl;
 
 import static com.example.keycloakspringbootmicroservice.constants.ExceptionConstants.CREDENTIALS_INVALID_EXCEPTION;
 
-import com.example.keycloakspringbootmicroservice.domain.Account;
 import com.example.keycloakspringbootmicroservice.domain.Group;
+import com.example.keycloakspringbootmicroservice.domain.Organization;
 import com.example.keycloakspringbootmicroservice.domain.User;
-import com.example.keycloakspringbootmicroservice.dto.AccountDTO;
 import com.example.keycloakspringbootmicroservice.dto.GroupDTO;
+import com.example.keycloakspringbootmicroservice.dto.OrganizationDTO;
 import com.example.keycloakspringbootmicroservice.dto.UserDTO;
 import com.example.keycloakspringbootmicroservice.mapper.ApplicationMapper;
-import com.example.keycloakspringbootmicroservice.rest.repositories.AccountRepository;
 import com.example.keycloakspringbootmicroservice.rest.repositories.GroupRepository;
+import com.example.keycloakspringbootmicroservice.rest.repositories.OrganizationRepository;
 import com.example.keycloakspringbootmicroservice.rest.repositories.UserRepository;
-import com.example.keycloakspringbootmicroservice.rest.requests.CreateAccountRequest;
-import com.example.keycloakspringbootmicroservice.services.AccountService;
+import com.example.keycloakspringbootmicroservice.rest.requests.CreateOrganizationRequest;
+import com.example.keycloakspringbootmicroservice.services.OrganizationService;
 import java.time.Instant;
-import java.util.HashSet;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -35,21 +35,21 @@ import org.springframework.util.StringUtils;
 
 @Service
 @Transactional
-public class AccountServiceImpl implements AccountService {
+public class OrganizationServiceImpl implements OrganizationService {
 
     private final RealmResource realmResource;
-    private final AccountRepository accountRepository;
+    private final OrganizationRepository organizationRepository;
     private final UserRepository userRepository;
     private final GroupRepository groupRepository;
     private final ApplicationMapper applicationMapper;
     private final ModelMapper modelMapper;
 
-    public AccountServiceImpl(RealmResource realmResource,
-        AccountRepository accountRepository,
+    public OrganizationServiceImpl(RealmResource realmResource,
+        OrganizationRepository organizationRepository,
         UserRepository userRepository, GroupRepository groupRepository,
         ApplicationMapper applicationMapper, ModelMapper modelMapper) {
         this.realmResource = realmResource;
-        this.accountRepository = accountRepository;
+        this.organizationRepository = organizationRepository;
         this.userRepository = userRepository;
         this.groupRepository = groupRepository;
         this.applicationMapper = applicationMapper;
@@ -57,59 +57,59 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public AccountDTO createAccount(CreateAccountRequest request, String ownerEmail) {
+    public OrganizationDTO createOrganization(CreateOrganizationRequest request, String ownerEmail) {
         User owner = userRepository.findByEmail(ownerEmail)
             .orElseThrow(() -> new BadRequestException(CREDENTIALS_INVALID_EXCEPTION));
 
-        Account account = Account.builder()
+        Organization organization = Organization.builder()
             .name(request.getName())
             .owner(owner.getId())
             .registrationDateTime(Instant.now())
-            .users(new HashSet<>())
+            .users(Collections.singleton(owner))
             .build();
-        accountRepository.save(account);
+        organizationRepository.save(organization);
 
-        List<GroupRepresentation> defaultAccountGroups = getDefaultAccountGroups(account);
-        for (GroupRepresentation gr : defaultAccountGroups) {
+        List<GroupRepresentation> defaultGroups = getDefaultOrganizationIdGroups(organization);
+        for (GroupRepresentation gr : defaultGroups) {
             Group group = Group.builder()
-                .account(account)
+                .organization(organization)
                 .name(gr.getName())
                 .keycloakGroupId(gr.getId())
-                .users(new HashSet<>())
+                .users(Collections.singleton(owner))
                 .build();
 
             groupRepository.save(group);
         }
 
-        return applicationMapper.accountToAccountDto(account);
+        return applicationMapper.organizationToOrganizationDto(organization);
     }
 
     @Override
-    public AccountDTO getAccountById(UUID accountId) {
-        Account account = accountRepository.findById(accountId)
+    public OrganizationDTO getOrganizationById(UUID organizationIdId) {
+        Organization organization = organizationRepository.findById(organizationIdId)
             .orElseThrow(() -> new NotFoundException(CREDENTIALS_INVALID_EXCEPTION));
 
-        AccountDTO result = modelMapper.map(account, AccountDTO.class);
-//        Set<GroupDTO> groupDTOs = groupRepository.findAllByAccountId(account.getId()).stream()
-//            .map(g -> modelMapper.map(g, GroupDTO.class))
-//            .collect(Collectors.toSet());
-//        result.setGroupDTOs(groupDTOs);
-//        result.setUserDTOs(account.getUsers().stream()
-//            .map(u -> modelMapper.map(u, UserDTO.class))
-//            .collect(Collectors.toSet()));
+        OrganizationDTO result = modelMapper.map(organization, OrganizationDTO.class);
+        Set<GroupDTO> groupDTOs = groupRepository.findAllByOrganizationId(organization.getId()).stream()
+            .map(g -> modelMapper.map(g, GroupDTO.class))
+            .collect(Collectors.toSet());
+        result.setGroupDTOs(groupDTOs);
+        result.setUserDTOs(organization.getUsers().stream()
+            .map(u -> modelMapper.map(u, UserDTO.class))
+            .collect(Collectors.toSet()));
         return result;
     }
 
-    private List<GroupRepresentation> getDefaultAccountGroups(Account account) {
+    private List<GroupRepresentation> getDefaultOrganizationIdGroups(Organization organization) {
         Set<GroupRepresentation> defaultGroups = realmResource.getDefaultGroups().stream()
             .map(g -> realmResource.groups().group(g.getId()).toRepresentation())
             .collect(Collectors.toSet());
 
-        GroupRepresentation accountGroupRoot = new GroupRepresentation();
-        accountGroupRoot.setName(account.getId().toString());
-        accountGroupRoot.setPath("/" + account.getId().toString());
+        GroupRepresentation groupRoot = new GroupRepresentation();
+        groupRoot.setName(organization.getId().toString());
+        groupRoot.setPath("/" + organization.getId().toString());
 
-        Response response = realmResource.groups().add(accountGroupRoot);
+        Response response = realmResource.groups().add(groupRoot);
         GroupResource parentGroup = realmResource.groups()
             .group(CreatedResponseUtil.getCreatedId(response));
 
@@ -118,7 +118,7 @@ public class AccountServiceImpl implements AccountService {
             String subGroupName = StringUtils.capitalize(gr.getName().replace("console-default-", "")) + " group";
             GroupRepresentation subGroup = new GroupRepresentation();
             subGroup.setName(subGroupName);
-            subGroup.setPath("/" + account.getId() + "/" + subGroupName);
+            subGroup.setPath("/" + organization.getId() + "/" + subGroupName);
             subGroup.setRealmRoles(gr.getRealmRoles());
 
             Response subGroupResponse = parentGroup.subGroup(subGroup);

@@ -3,12 +3,9 @@ package com.example.keycloakspringbootmicroservice.rest.security.jwt;
 import static com.example.keycloakspringbootmicroservice.constants.ApplicationConstants.ROOT_PATH;
 import static com.example.keycloakspringbootmicroservice.constants.ApplicationConstants.USERS_PATH;
 import static com.example.keycloakspringbootmicroservice.constants.ExceptionConstants.CREDENTIALS_INVALID_EXCEPTION;
-import static com.example.keycloakspringbootmicroservice.domain.enums.Status.ACTIVE;
 
-import com.example.keycloakspringbootmicroservice.domain.User;
 import com.example.keycloakspringbootmicroservice.rest.repositories.UserRepository;
 import java.io.IOException;
-import java.util.Optional;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -42,16 +39,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        String userEmailFromJwt = jwtAuthenticationUtils.getUserEmailFromJwt(jwtToken);
-        Optional<User> optionalUser = userRepository.findByEmail(userEmailFromJwt);
-
-        if (optionalUser.isEmpty() || !ACTIVE.equals(optionalUser.get().getStatus())) {
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, CREDENTIALS_INVALID_EXCEPTION);
-            return;
-        }
+//        String userEmailFromJwt = jwtAuthenticationUtils.getUserEmailFromJwt(jwtToken);
+//        Optional<User> optionalUser = userRepository.findByEmail(userEmailFromJwt);
+//
+//        if (optionalUser.isEmpty() || !ACTIVE.equals(optionalUser.get().getStatus())) {
+//            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, CREDENTIALS_INVALID_EXCEPTION);
+//            return;
+//        }
 
         UsernamePasswordAuthenticationToken authentication =
-            new UsernamePasswordAuthenticationToken(userEmailFromJwt, userEmailFromJwt);
+            new UsernamePasswordAuthenticationToken("userEmailFromJwt", "userEmailFromJwt");
         SecurityContextHolder.getContext().setAuthentication(authentication);
         filterChain.doFilter(request, response);
     }

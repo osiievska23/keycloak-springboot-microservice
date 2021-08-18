@@ -14,12 +14,12 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class AccountDTO {
+public class OrganizationDTO {
 
     private UUID id;
     private String name;
-//    private UUID ownerId;
+    private UUID ownerId;
     private Instant registrationDateTime;
-//    private Set<UserDTO> userDTOs;
-//    private Set<GroupDTO> groupDTOs;
+    private Set<UserDTO> userDTOs;
+    private Set<GroupDTO> groupDTOs;
 }

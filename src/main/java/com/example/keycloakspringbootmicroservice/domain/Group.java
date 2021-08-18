@@ -37,8 +37,8 @@ public class Group {
     public String name;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "account_id")
-    public Account account;
+    @JoinColumn(name = "organization_id")
+    public Organization organization;
 
     @NotNull
     @Column(name = "keycloak_group_id")

@@ -7,5 +7,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface GroupRepository extends JpaRepository<Group, UUID> {
 
-    List<Group> findAllByAccountId(UUID accountId);
+    List<Group> findAllByOrganizationId(UUID organizationId);
 }

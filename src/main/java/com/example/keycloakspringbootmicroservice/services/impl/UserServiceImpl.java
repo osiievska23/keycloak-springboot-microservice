@@ -5,6 +5,7 @@ import static com.example.keycloakspringbootmicroservice.constants.ExceptionCons
 import com.example.keycloakspringbootmicroservice.domain.User;
 import com.example.keycloakspringbootmicroservice.domain.enums.Status;
 import com.example.keycloakspringbootmicroservice.dto.UserDTO;
+import com.example.keycloakspringbootmicroservice.exceptions.ForbiddenException;
 import com.example.keycloakspringbootmicroservice.rest.repositories.UserRepository;
 import com.example.keycloakspringbootmicroservice.services.UserService;
 import java.util.Collections;
@@ -12,6 +13,7 @@ import javax.ws.rs.BadRequestException;
 import javax.ws.rs.core.Response;
 import org.keycloak.admin.client.CreatedResponseUtil;
 import org.keycloak.admin.client.resource.RealmResource;
+import org.keycloak.admin.client.resource.UserResource;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.modelmapper.ModelMapper;
@@ -49,11 +51,18 @@ public class UserServiceImpl implements UserService {
         keycloakUser.setEnabled(true);
 
         Response response = realmResource.users().create(keycloakUser);
+        if (response.getStatus() != 201) {
+            throw new ForbiddenException(response.getStatusInfo().getReasonPhrase());
+        }
+
+        String keycloakUserId = CreatedResponseUtil.getCreatedId(response);
+        UserResource u = realmResource.users().get(keycloakUserId);
+        u.sendVerifyEmail(keycloakUserId);
 
         User user = User.builder()
             .email(userDTO.getEmail())
             .status(Status.ACTIVE)
-            .keycloakUserId(CreatedResponseUtil.getCreatedId(response))
+            .keycloakUserId(keycloakUserId)
             .build();
 
         return modelMapper.map(userRepository.save(user), UserDTO.class);

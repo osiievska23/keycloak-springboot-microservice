@@ -12,7 +12,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class CreateAccountRequest {
+public class CreateOrganizationRequest {
 
     @NotBlank
     private String name;

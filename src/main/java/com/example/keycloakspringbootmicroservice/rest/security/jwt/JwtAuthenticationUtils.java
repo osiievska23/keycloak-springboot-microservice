@@ -21,13 +21,18 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpHeaders;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
 public class JwtAuthenticationUtils {
 
-    private static final String PublicKey = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAsIcOFZQBcV0FK35J64+cY9hCrphkIRjvcNfiE89zRluBRACYjDeCd186Uc3X/6oyFF5T1IQkHIgpxhNRr51x1vw+ez5tePdJinvsqRsOSJ/qKrL6kta6abyxaeps7mqzsa5yweeDKKKQKLu28Xqe1GBLqd9cTCUPZF8TeNHK5aHq4NLUvlnYkSnDo/MKRHgiAOWu+PEonun7mVhFiQTNocXfbPpyi6zDMvkBOjPA9vQAhoC/65syDkZeI3+F9AkgovgVMcdHwVx8Ndvc4oynqxp2xZUnHR1buPgHXEZHXcwyIylqCUiLKjMpEwUSIzoS+msevxePFEXdVwmWSqa6JwIDAQAB";
+    public final String PublicKey;
+
+    public JwtAuthenticationUtils(Environment environment) {
+        PublicKey = environment.getProperty("api.keycloak.public.key");
+    }
 
     public boolean validateToken(String jwtToken) {
         try {

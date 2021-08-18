@@ -1,6 +1,6 @@
 CREATE SCHEMA IF NOT EXISTS schema;
 
-CREATE TABLE IF NOT EXISTS schema.accounts
+CREATE TABLE IF NOT EXISTS schema.organization
 (
     id                     uuid      NOT NULL,
     name                   VARCHAR(255),
@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS schema.groups
     id                uuid NOT NULL,
     name              VARCHAR(255),
     keycloak_group_id VARCHAR(255),
-    account_id        uuid REFERENCES schema.accounts (id),
+    organization_id   uuid REFERENCES schema.organization (id),
     PRIMARY KEY (id)
 );
 
@@ -35,9 +35,9 @@ CREATE TABLE IF NOT EXISTS schema.groups_has_users
     PRIMARY KEY (user_id, group_id)
 );
 
-CREATE TABLE IF NOT EXISTS schema.account_users
+CREATE TABLE IF NOT EXISTS schema.organization_users
 (
-    account_id uuid NOT NULL REFERENCES schema.accounts (id),
-    user_id    uuid NOT NULL REFERENCES schema.users (id),
-    PRIMARY KEY (account_id, user_id)
+    organization_id uuid NOT NULL REFERENCES schema.organization (id),
+    user_id         uuid NOT NULL REFERENCES schema.users (id),
+    PRIMARY KEY (organization_id, user_id)
 );

@@ -38,7 +38,7 @@ public class User {
     private Status status;
 
     @ManyToMany(mappedBy = "users")
-    private Set<Account> accounts;
+    private Set<Organization> organizations;
 
     @ManyToMany(mappedBy = "users")
     private Set<Group> groups;

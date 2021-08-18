@@ -21,14 +21,14 @@ import lombok.Setter;
 import org.hibernate.annotations.Where;
 
 @Entity
-@Table(name = "accounts")
+@Table(name = "organizations")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @Where(clause = "status!=3")
-public class Account { // todo rename
+public class Organization {
 
     @Id
     @GeneratedValue
@@ -47,8 +47,8 @@ public class Account { // todo rename
     private Instant registrationDateTime;
 
     @ManyToMany
-    @JoinTable(name = "account_users",
-        joinColumns = @JoinColumn(name = "account_id"),
+    @JoinTable(name = "organization_users",
+        joinColumns = @JoinColumn(name = "organization_id"),
         inverseJoinColumns = @JoinColumn(name = "user_id"))
     private Set<User> users;
 
